@@ -59,12 +59,8 @@ void execute(const string &op, Vector<T> &V)
 int main()
 {
     Vector<int> V;
-    while(true)
-    {
-        string op;
-        cin >> op;
-        execute(op, V);
-    }
+    string op;
+    while (cin >> op) execute(op, V);
 
     return 0;
 }

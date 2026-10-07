@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -14,22 +15,23 @@ template <typename T>
 class Vector
 {
 protected:
+    // 向量内容标志
     Rank _size;
     int _capacity;
     T *_elem;
+    // 内部操作函数
     void expand();
     void shrink();
     void copyFrom(T const *A, Rank lo, Rank hi);
 
 public:
+    // 构造和析构
     Vector(int c = DEFAULT_CAPACITY, Rank s = 0, int v = 0)
     {
         _elem = new T[_capacity = c];
+        _size = s;
         for(int i=0; i<s; i++)
-        {
-            _size++;
             _elem[i] = v;
-        }
     }
 
     Vector(T const *A, Rank lo, Rank hi)
@@ -37,51 +39,63 @@ public:
     Vector(T const *A, Rank n)
     { copyFrom(A, 0, n); }
 
-    Vector(Vector<T> *V, Rank lo, Rank hi)
-    { copyFrom(V->_elem, lo, hi); }
-    Vector(Vector<T> *V)
-    { copyFrom(V->_elem, 0, V->_size); }
+    Vector(Vector<T> const &V, Rank lo, Rank hi)
+    { copyFrom(V._elem, lo, hi); }
+    Vector(Vector<T> const &V)
+    { copyFrom(V._elem, 0, V._size); }
 
     ~Vector()
     { delete[] _elem; }
 
-    T &operator[](Rank r)
-    { return _elem[r]; }
-    int size()
-    { return _size; }
-    bool empty()
-    { return !_size; }
-    void load(string filename);
-    void save(string filename);
-    void show();
-    void push_back(T const &x);
-    void pop_back();
-    void insert(int p, T const &x);
-    void erase(int p);
-    void update(int p, T const &x);
-    void reverse();
-};
+    // 对外操作函数
+    T &operator[](Rank r)             { return _elem[r]; }
+    T const &operator[](Rank r) const { return _elem[r]; }
+    Vector<T>& operator=(Vector<T> const&);
+    int size()                          // 返回向量大小
+    const { return _size; }
+    bool empty()                        // 返回向量是否为空
+    const { return !_size; }
+    void load(string filename);         // 加载文件
+    void save(string filename);         // 保存文件
+    void show();                        // 顺序展示向量
+    void push_back(T const &x);         // 末元素压入
+    void pop_back();                    // 末元素弹出
+    void insert(int p, T const &x);     // 指定位置插入
+    void erase(int p);                  // 指定位置删除
+    void update(int p, T const &x);     // 指定位置修改
+    void reverse();                     // 向量倒置
+}; 
 
 template <typename T>
 void Vector<T>::copyFrom(T const *A, Rank lo, Rank hi)
 {
+    if(hi < lo) hi = lo;
     _capacity = (hi-lo) * 2;
     _elem = new T[_capacity];
     _size = 0;
     for(Rank i=lo; i<hi; i++)
     {
-        _elem[i] = A[i];
+        _elem[i - lo] = A[i];
         _size++;
     }
+}
+
+template <typename T>
+Vector<T> &Vector<T>::operator=(Vector<T> const &V)
+{
+    if(this == &V) return *this;
+    if(_elem) delete[] _elem;
+    copyFrom(V._elem, 0, V.size());
+    return *this;
 }
 
 template <typename T>
 void Vector<T>::expand()
 {
     if(_size < _capacity) return;
-    if(_capacity < DEFAULT_CAPACITY) _capacity = DEFAULT_CAPACITY;
+    if(_capacity < DEFAULT_CAPACITY) _capacity = DEFAULT_CAPACITY;   // 扩容不小于默认
     T *_oldElem = _elem;
-    _elem = new T[_capacity <<= 1];
+    _elem = new T[_capacity <<= 1];   // 扩容为两倍
     for(int i=0; i<_size; i++)
         _elem[i]= _oldElem[i];
     delete[] _oldElem;
@@ -90,10 +104,10 @@ void Vector<T>::expand()
 template <typename T>
 void Vector<T>::shrink()
 {
-    if(_capacity < DEFAULT_CAPACITY<<1) return;
-    if(_size<<2 > _capacity) return;
+    if(_capacity < DEFAULT_CAPACITY<<1) return;   // 缩容不小于默认一半
+    if(_size<<2 > _capacity) return;   // 缩容后不小于一半
     T *_oldElem = _elem;
-    _elem = new T[_capacity >>= 1];
+    _elem = new T[_capacity >>= 1];   //缩容为一半
     for(int i=0; i<_size; i++)
         _elem[i] = _oldElem[i];
     delete[] _oldElem;
@@ -111,7 +125,8 @@ template <typename T>
 void Vector<T>::insert(int p, T const &x)
 {
     expand();
-    Rank r = --p;
+    if (p < 1 || p > _size + 1) { return; }
+    Rank r = p - 1;
     for(int i=_size; i>r; i--) 
         _elem[i] = _elem[i-1];
     _elem[r] = x;
@@ -123,7 +138,8 @@ template <typename T>
 void Vector<T>::erase(int p)
 {
     shrink();
-    Rank r = --p;
+    if (p < 1 || p > _size) { return; }
+    Rank r = p - 1;
     for(int i=r; i<_size-1; i++)
         _elem[i] = _elem[i+1];
     _size--;
@@ -133,19 +149,26 @@ void Vector<T>::erase(int p)
 template <typename T>
 void Vector<T>::push_back(T const &x)
 {
-    insert(_size+1, x);
+    expand(); 
+    _elem[_size++] = x;
+    show();
 }
 
 template <typename T>
 void Vector<T>::pop_back()
 {
-    erase(_size+1);
+    if (_size > 0) 
+    { 
+        --_size; shrink(); 
+    }
+    show();
 }
 
 template <typename T>
 void Vector<T>::update(int p, T const &x)
 {
-    Rank r = --p;
+    if (p < 1 || p > _size) { return; }
+    Rank r = p - 1;
     _elem[r] = x;
     show();
 }
@@ -153,11 +176,12 @@ void Vector<T>::update(int p, T const &x)
 template <typename T>
 void Vector<T>::reverse()
 {
-    T *_oldElem = _elem;
-    _elem = new T[_capacity];
-    for(int i=0; i<_size; i++)
-        _elem[i] = _oldElem[_size-1-i];
-    delete[] _oldElem;
+    for (int i = 0; i < _size / 2; ++i)
+    {
+        T tmp = _elem[i];
+        _elem[i] = _elem[_size - 1 - i];
+        _elem[_size - 1 - i] = tmp;
+    }
 }
 
 template <typename T>
@@ -176,17 +200,20 @@ void Vector<T>::load(string filename)
             cerr << "Fail loading the file!\n";
             exit(EXIT_FAILURE);
         }
-        if (!(infile >> _size)) 
+        int n = 0;
+        if (!(infile >> n) || n < 0) 
         { 
             cerr << "Broken file!\n"; 
-            exit(EXIT_FAILURE); 
+            return; 
         }
+        _size = n;
 
         _capacity = _size << 1;
+        delete[] _elem;
         _elem = new T[_capacity];
         for(int i=0; i<_size; i++)
             infile >> _elem[i];
-        cout << "Loaded successfully from [" << filename << "]" << endl;
+        cout << "Loaded successfully from " << filename << " (text)!" << endl;
         infile.close();
     }
     else if(ext == ".bin")
@@ -197,13 +224,21 @@ void Vector<T>::load(string filename)
             cerr << "Fail loading the file!\n";
             exit(EXIT_FAILURE);
         }
-        infile.read(reinterpret_cast<char*>(&_size), sizeof(_size));
+        int n = 0;
+        infile.read(reinterpret_cast<char*>(&n), sizeof(n));
+        if (n < 0) 
+        { 
+            cerr << "Broken file!\n"; 
+            return; 
+        }
+        _size = n;
 
         _capacity = _size << 1;
+        delete[] _elem;
         _elem = new T[_capacity];
         infile.read(reinterpret_cast<char*>(_elem), static_cast<streamsize>(_size * sizeof(T)));
 
-        cout << "Loaded successfully from [" << filename << "]" << endl;
+        cout << "Loaded successfully from " << filename << " (binary)!" << endl;
         infile.close();
     }
     else
@@ -233,7 +268,7 @@ void Vector<T>::save(string filename)
         for(int i=0; i<_size; i++)
             onfile << _elem[i] << " ";
         onfile << "\n";
-        cout << "Saved successfully to [" << filename << "]" << endl;
+        cout << "Saved successfully to " << filename << " (text)!" << endl;
         onfile.close();
     }
     else if(ext == ".bin")
@@ -248,7 +283,7 @@ void Vector<T>::save(string filename)
         onfile.write(reinterpret_cast<const char*>(&_size), sizeof(_size));
         onfile.write(reinterpret_cast<const char*>(_elem), static_cast<streamsize>(_size * sizeof(T)));
 
-        cout << "Saved successfully to [" << filename << "]" << endl;
+        cout << "Saved successfully to " << filename << " (binary)!" << endl;
         onfile.close();
     }
     else

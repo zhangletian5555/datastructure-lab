@@ -47,12 +47,8 @@ void execute(const string &op, List<T> &L)
 int main()
 {
     List<int> L;
-    while(true)
-    {
-        string op;
-        cin >> op;
-        execute(op, L);
-    }
+    string op;
+    while (cin >> op) execute(op, L);
 
     return 0;
 }
