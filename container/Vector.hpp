@@ -55,6 +55,10 @@ public:
     const { return _size; }
     bool empty()                        // 返回向量是否为空
     const { return !_size; }
+    int capacity()                      // 返回向量容量
+    const { return _capacity; }
+    void reserve(int c);                // 扩容至指定容量
+    void clear();                       // 清空向量
     void load(string filename);         // 加载文件
     void save(string filename);         // 保存文件
     void show();                        // 顺序展示向量
@@ -111,6 +115,23 @@ void Vector<T>::shrink()
     for(int i=0; i<_size; i++)
         _elem[i] = _oldElem[i];
     delete[] _oldElem;
+}
+
+template <typename T>
+void Vector<T>::reserve(int c)
+{
+    if(c <= _capacity) return;   // 容量已经够用
+    T *_oldElem = _elem;
+    _elem = new T[_capacity = c];
+    for(int i=0; i<_size; i++)
+        _elem[i] = _oldElem[i];
+    delete[] _oldElem;
+}
+
+template <typename T>
+void Vector<T>::clear()
+{
+    _size = 0;
 }
 
 template <typename T>

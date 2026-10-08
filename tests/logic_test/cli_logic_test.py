@@ -267,9 +267,9 @@ def list_tests(d):
     D = [13, 25, 5, 25, 4]
     cases = [
         ("load 后内容", [], D),
-        ("insertAsFirst", ["insertAsFirst 99"], [99] + D),
-        ("insertAsLast", ["insertAsLast 99"], D + [99]),
-        ("首尾各插一个", ["insertAsFirst 1", "insertAsLast 2"], [1] + D + [2]),
+        ("push_front", ["push_front 99"], [99] + D),
+        ("push_back", ["push_back 99"], D + [99]),
+        ("首尾各插一个", ["push_front 1", "push_back 2"], [1] + D + [2]),
         ("空表 show", None, []),
     ]
     for name, ops, want in cases:

@@ -62,6 +62,7 @@ public:
     List(List<T> const &L, Rank r, int n);
     List(ListNodePosi(T) p, int n);
     ~List();
+    List<T>& operator=(List<T> const&);
 
     void clear();
     Rank size() const { return _size; }
@@ -72,13 +73,18 @@ public:
     bool valid(ListNodePosi(T) p) { return p && (trailer != p) && (header != p); }   // 检查节点合法性
 
     void remove(ListNodePosi(T) p);                     // 移除节点
-    void insertAsFirst(T const &e);                     // 在头插入
-    void insertAsLast(T const &e);                      // 在尾插入
+    void push_front(T const &e);                        // 在头插入
+    void push_back(T const &e);                         // 在尾插入
     void insertBefore(ListNodePosi(T) p, T const &e);   // 在前插入
     void insertAfter(ListNodePosi(T) p, T const &e);    // 在后插入
+    void pop_front();                                   // 删除首元素
+    void pop_back();                                    // 删除末元素
+    void insert(Rank r, T const &e);                    // 指定秩插入
+    void erase(Rank r);                                 // 指定秩删除
     void load(string filename);
     void save(string filename);
     void show();
+    void reverseShow();
 };
 
 template <typename T>
@@ -105,13 +111,13 @@ T &List<T>::operator[](Rank r)
 }
 
 template <typename T>
-void List<T>::insertAsFirst(T const &e)
+void List<T>::push_front(T const &e)
 {
     header->insertAsSucc(e);
     ++_size;
 }
 template <typename T>
-void List<T>::insertAsLast(T const &e)
+void List<T>::push_back(T const &e)
 {
     trailer->insertAsPred(e);
     ++_size;
@@ -128,6 +134,30 @@ void List<T>::insertAfter(ListNodePosi(T) p, T const &e)
     p->insertAsSucc(e);
     ++_size;
 }
+template <typename T>
+void List<T>::pop_front()
+{
+    remove(front());
+}
+template <typename T>
+void List<T>::pop_back()
+{
+    remove(back());
+}
+template <typename T>
+void List<T>::insert(Rank r, T const &e)
+{
+    ListNodePosi(T) p = front();
+    while(r-- > 0 && p != trailer) p = p->succ;
+    insertBefore(p, e);
+}
+template <typename T>
+void List<T>::erase(Rank r)
+{
+    ListNodePosi(T) p = front();
+    while(r-- > 0 && p != trailer) p = p->succ;
+    remove(p);
+}
 
 template <typename T>
 void List<T>::copyNodes(ListNodePosi(T) p, int n)
@@ -135,7 +165,7 @@ void List<T>::copyNodes(ListNodePosi(T) p, int n)
     init();
     while(n>0)
     {
-        insertAsLast(p->data);
+        push_back(p->data);
         p = p->succ;
         --n;
     }
@@ -154,6 +184,17 @@ List<T>::List(List<T> const &L, Rank r, int n)
 template <typename T>
 List<T>::List(ListNodePosi(T) p, int n)
 { copyNodes(p, n); }
+
+template <typename T>
+List<T> &List<T>::operator=(List<T> const &L)
+{
+    if(this == &L) return *this;      // 自赋值
+    clear();
+    delete header;                    // 释放旧哨兵
+    delete trailer;
+    copyNodes(L.front(), L._size);    // copyNodes 内部重建哨兵
+    return *this;
+}
 
 template <typename T>
 void List<T>::remove(ListNodePosi(T) p)
@@ -208,7 +249,7 @@ void List<T>::load(string filename)
         {
             T next_e{};
             infile >> next_e;
-            insertAsLast(next_e);
+            push_back(next_e);
             --n;
         }
         cout << "Loaded successfully from " << filename << " (text)!" << endl;
@@ -230,7 +271,7 @@ void List<T>::load(string filename)
         {
             T next_e{};
             infile.read(reinterpret_cast<char*>(&next_e), sizeof(next_e));
-            insertAsLast(next_e);
+            push_back(next_e);
             --n;
         }
         cout << "Loaded successfully from " << filename << " (binary)!" << endl;
@@ -302,6 +343,18 @@ void List<T>::show()
     {
         cout << p->data << " ";
         p = p->succ;
+    }
+    cout << "\n";
+}
+
+template <typename T>
+void List<T>::reverseShow()
+{
+    ListNodePosi(T) p = back();
+    for(int i=0; i<_size; i++)
+    {
+        cout << p->data << " ";
+        p = p->pred;
     }
     cout << "\n";
 }

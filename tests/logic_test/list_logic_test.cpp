@@ -23,14 +23,14 @@ typedef List<int> LI;
 static LI make(int n)
 {
     LI l;
-    for (int i = 1; i <= n; ++i) l.insertAsLast(i);
+    for (int i = 1; i <= n; ++i) l.push_back(i);
     return l;
 }
 
 static std::vector<int> dump(LI &l)      // 按结点链正向走一遍，不看 _size
 {
     std::vector<int> out;
-    ListNodePosi(int) p = l.first();
+    ListNodePosi(int) p = l.front();
     for (int i = 0; i < l.size(); ++i) { out.push_back(p->data); p = p->succ; }
     return out;
 }
@@ -47,26 +47,26 @@ void list_basic()
     LI l = make(3);
     CHECK(l.size() == 3, "size 不对");
     CHECK(same(l, {1, 2, 3}), "内容不对");
-    CHECK(l.first()->data == 1, "first() 不对");
-    CHECK(l.last()->data == 3, "last() 不对");
+    CHECK(l.front()->data == 1, "front() 不对");
+    CHECK(l.back()->data == 3, "back() 不对");
     cout << "OK" << endl;
 }
 
 void list_circular()
 {
     LI l = make(3);
-    // 从 first() 走 size+2 步应该正好回到 first()
-    ListNodePosi(int) p = l.first();
+    // 从 front() 走 size+2 步应该正好回到 front()
+    ListNodePosi(int) p = l.front();
     for (int i = 0; i < l.size() + 2; ++i) p = p->succ;
-    CHECK(p == l.first(), "正向不是循环的");
+    CHECK(p == l.front(), "正向不是循环的");
     // 反向同理
-    p = l.last();
+    p = l.back();
     for (int i = 0; i < l.size() + 2; ++i) p = p->pred;
-    CHECK(p == l.last(), "反向不是循环的");
+    CHECK(p == l.back(), "反向不是循环的");
     // 空表也要成环
     LI e;
-    CHECK(e.first()->succ == e.last()->succ || e.size() == 0, "sanity");
-    CHECK(e.first()->pred != nullptr && e.first()->succ != nullptr,
+    CHECK(e.front()->succ == e.back()->succ || e.size() == 0, "sanity");
+    CHECK(e.front()->pred != nullptr && e.front()->succ != nullptr,
           "空表的哨兵指针为空（说明不是循环链表）");
     cout << "OK" << endl;
 }
@@ -74,26 +74,26 @@ void list_circular()
 void list_insert_variants()
 {
     LI l = make(3);                     // 1 2 3
-    l.insertAsFirst(0);                 // 0 1 2 3
-    l.insertAsLast(4);                  // 0 1 2 3 4
+    l.push_front(0);                 // 0 1 2 3
+    l.push_back(4);                  // 0 1 2 3 4
     CHECK(same(l, {0, 1, 2, 3, 4}), "首尾插入错误");
-    l.insertBefore(l.first(), -1);      // -1 0 1 2 3 4
-    CHECK(same(l, {-1, 0, 1, 2, 3, 4}), "insertBefore(first) 错误");
-    l.insertAfter(l.last(), 5);         // ... 5
-    CHECK(same(l, {-1, 0, 1, 2, 3, 4, 5}), "insertAfter(last) 错误");
-    l.insertAfter(l.first(), -2);       // -1 -2 0 1 2 3 4 5
-    CHECK(same(l, {-1, -2, 0, 1, 2, 3, 4, 5}), "insertAfter(first) 错误");
+    l.insertBefore(l.front(), -1);      // -1 0 1 2 3 4
+    CHECK(same(l, {-1, 0, 1, 2, 3, 4}), "insertBefore(front) 错误");
+    l.insertAfter(l.back(), 5);         // ... 5
+    CHECK(same(l, {-1, 0, 1, 2, 3, 4, 5}), "insertAfter(back) 错误");
+    l.insertAfter(l.front(), -2);       // -1 -2 0 1 2 3 4 5
+    CHECK(same(l, {-1, -2, 0, 1, 2, 3, 4, 5}), "insertAfter(front) 错误");
     cout << "OK" << endl;
 }
 
 void list_remove_edges()
 {
     LI l = make(3);
-    l.remove(l.first());
+    l.remove(l.front());
     CHECK(same(l, {2, 3}), "remove(first) 错误");
-    l.remove(l.last());
+    l.remove(l.back());
     CHECK(same(l, {2}), "remove(last) 错误");
-    l.remove(l.first());
+    l.remove(l.front());
     CHECK(l.size() == 0 && l.empty(), "删空后 size 不为 0");
     cout << "OK" << endl;
 }
@@ -101,8 +101,8 @@ void list_remove_edges()
 void list_remove_sentinel()
 {
     LI l = make(3);
-    l.remove(l.first()->pred);          // header
-    l.remove(l.last()->succ);           // trailer
+    l.remove(l.front()->pred);          // header
+    l.remove(l.back()->succ);           // trailer
     CHECK(l.size() == 3, "remove 哨兵改变了 size（应当被拒绝）");
     CHECK(same(l, {1, 2, 3}), "remove 哨兵破坏了链表");
     cout << "OK" << endl;
@@ -113,7 +113,7 @@ void list_clear_reuse()
     LI l = make(5);
     l.clear();
     CHECK(l.size() == 0, "clear 后 size 不为 0");
-    l.insertAsLast(9);
+    l.push_back(9);
     CHECK(same(l, {9}), "clear 后无法继续使用");
     cout << "OK" << endl;
 }
@@ -123,7 +123,7 @@ void list_copy_ctor()
     LI src = make(3);
     LI c(src);
     CHECK(same(c, {1, 2, 3}), "拷贝构造内容不对");
-    c.insertAsLast(99);
+    c.push_back(99);
     CHECK(same(src, {1, 2, 3}), "改副本影响了原链表");
     cout << "OK" << endl;
 }
@@ -134,7 +134,7 @@ void list_copy_assign()
     LI dst;
     dst = src;
     CHECK(same(dst, {1, 2, 3}), "拷贝赋值内容不对");
-    dst.insertAsLast(99);
+    dst.push_back(99);
     CHECK(same(src, {1, 2, 3}), "改副本影响了原链表");
     cout << "OK" << endl;
 }
@@ -180,13 +180,13 @@ void list_big()
 {
     const int N = 20000;
     LI l;
-    for (int i = 0; i < N; ++i) l.insertAsLast(i);
+    for (int i = 0; i < N; ++i) l.push_back(i);
     CHECK(l.size() == N, "大批量插入后 size 不对");
     bool ok = true;
-    ListNodePosi(int) p = l.first();
+    ListNodePosi(int) p = l.front();
     for (int i = 0; i < N; ++i) { if (p->data != i) { ok = false; break; } p = p->succ; }
     CHECK(ok, "大批量插入后内容错位");
-    for (int i = 0; i < N; ++i) l.remove(l.first());
+    for (int i = 0; i < N; ++i) l.remove(l.front());
     CHECK(l.size() == 0, "大批量删除后 size 不为 0");
     cout << "OK" << endl;
 }
@@ -194,9 +194,9 @@ void list_big()
 void list_insert_around_sentinels()
 {
     LI l = make(3);                          // 1 2 3
-    l.insertBefore(l.last()->succ, 4);       // insertBefore(trailer) 等价于尾插
+    l.insertBefore(l.back()->succ, 4);       // insertBefore(trailer) 等价于尾插
     CHECK(same(l, {1, 2, 3, 4}), "insertBefore(trailer) 错误");
-    l.insertAfter(l.first()->pred, 0);       // insertAfter(header) 等价于头插
+    l.insertAfter(l.front()->pred, 0);       // insertAfter(header) 等价于头插
     CHECK(same(l, {0, 1, 2, 3, 4}), "insertAfter(header) 错误");
     cout << "OK" << endl;
 }
@@ -208,7 +208,7 @@ void list_empty_ops()
     l.clear();
     l.remove(nullptr);
     CHECK(l.size() == 0, "空表操作改变了 size");
-    CHECK(l.first() == l.last()->succ, "sanity");
+    CHECK(l.front() == l.back()->succ, "sanity");
     cout << "OK" << endl;
 }
 

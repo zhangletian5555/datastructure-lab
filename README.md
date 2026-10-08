@@ -90,8 +90,8 @@ datastructure-lab/
 | --- | --- | --- |
 | `load` | `filename.ext` | 读文件，元素依次追加到链表尾部 |
 | `show` | — | 一行内输出全部元素 |
-| `insertAsFirst` | `e` | 头部插入 `e` |
-| `insertAsLast` | `e` | 尾部插入 `e` |
+| `push_front` | `e` | 头部插入 `e` |
+| `push_back` | `e` | 尾部插入 `e` |
 | `size` | — | 输出元素个数 |
 | `save` | `filename.ext` | 保存到文件 |
 | `exit` | — | 结束程序，输出 `End executing!` |

@@ -13,18 +13,18 @@ void execute(const string &op, List<T> &L)
     }
     else if(op=="show")
     { L.show(); }
-    else if(op=="insertAsLast")
+    else if(op=="push_back")
     {
         T e = 0;
         cin >> e;
-        L.insertAsLast(e);
+        L.push_back(e);
         L.show();
     }
-    else if(op=="insertAsFirst")
+    else if(op=="push_front")
     {
         T e = 0;
         cin >> e;
-        L.insertAsFirst(e);
+        L.push_front(e);
         L.show();
     }
     else if(op=="size")
