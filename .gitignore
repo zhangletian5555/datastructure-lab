@@ -20,6 +20,9 @@ build/
 *.out
 *.exe
 
+tmp/
+_vec_test
+
 report/
 数据结构2026实验手册.pdf
 

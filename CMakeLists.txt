@@ -11,24 +11,32 @@ include_directories(${CMAKE_SOURCE_DIR}/container)
 
 enable_testing()
 
-# 主程序
+# ---- 数据目录 ----
+set(DATA_SRC_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/data)
+set(DATA_DST_DIR  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/data)
+
+file(GLOB DATA_FILES CONFIGURE_DEPENDS ${DATA_SRC_DIR}/*.csv)
+add_custom_target(copy_data ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${DATA_DST_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DATA_FILES} ${DATA_DST_DIR}
+    COMMENT "Copying data files to ${DATA_DST_DIR}")
+
+# ---- 测试目标生成器 ----
+function(add_dsh_test name src)
+    add_executable(${name} ${src})
+    target_compile_options(${name} PRIVATE -Wall -Wextra)
+    add_dependencies(${name} copy_data)
+    add_test(NAME ${name} COMMAND ${name}
+             WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    # 超时兜底
+    set_tests_properties(${name} PROPERTIES TIMEOUT 10)
+endfunction()
+
+# ---- 主程序 ----
 add_executable(main src/main.cpp)
 target_compile_options(main PRIVATE -Wall -Wextra)
+add_dependencies(main copy_data)
 
-# 测试
-add_executable(Vector_test tests/ADT_test/Vector_test.cpp)
-target_compile_options(Vector_test PRIVATE -Wall -Wextra)
-add_executable(List_test tests/ADT_test/List_test.cpp)
-target_compile_options(List_test PRIVATE -Wall -Wextra)
-
-# 数据文件自动复制到 build/bin
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tests/ADT_test/Vector_data.txt
-               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Vector_data.txt COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tests/ADT_test/List_data.txt
-               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/List_data.txt COPYONLY)
-
-# 在 build/bin 下运行
-add_test(NAME Vector_test COMMAND Vector_test
-         WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-add_test(NAME List_test COMMAND List_test
-         WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+# ---- 测试 ----
+add_dsh_test(Vector_test tests/ADT_test/Vector_test.cpp)
+add_dsh_test(List_test   tests/ADT_test/List_test.cpp)

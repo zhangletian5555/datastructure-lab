@@ -26,13 +26,15 @@ protected:
 
 public:
     // 构造和析构
-    Vector(int c = DEFAULT_CAPACITY, Rank s = 0, int v = 0)
-    {
-        _elem = new T[_capacity = c];
-        _size = s;
-        for(int i=0; i<s; i++)
-            _elem[i] = v;
-    }
+    // Vector(int c = DEFAULT_CAPACITY, Rank s = 0, int v = 0)
+    // {
+    //     _elem = new T[_capacity = c];
+    //     _size = s;
+    //     for(int i=0; i<s; i++)
+    //         _elem[i] = v;
+    // }
+    Vector(int c = DEFAULT_CAPACITY) :
+        _elem(new T[c]), _capacity(c), _size(0) {}
 
     Vector(T const *A, Rank lo, Rank hi)
     { copyFrom(A, lo, hi); }
@@ -152,7 +154,6 @@ void Vector<T>::insert(int p, T const &x)
         _elem[i] = _elem[i-1];
     _elem[r] = x;
     _size++;
-    show();
 }
 
 template <typename T>
@@ -164,7 +165,6 @@ void Vector<T>::erase(int p)
     for(int i=r; i<_size-1; i++)
         _elem[i] = _elem[i+1];
     _size--;
-    show();
 }
 
 template <typename T>
@@ -172,7 +172,6 @@ void Vector<T>::push_back(T const &x)
 {
     expand(); 
     _elem[_size++] = x;
-    show();
 }
 
 template <typename T>
@@ -182,7 +181,6 @@ void Vector<T>::pop_back()
     { 
         --_size; shrink(); 
     }
-    show();
 }
 
 template <typename T>
@@ -191,7 +189,6 @@ void Vector<T>::update(int p, T const &x)
     if (p < 1 || p > _size) { return; }
     Rank r = p - 1;
     _elem[r] = x;
-    show();
 }
 
 template <typename T>
