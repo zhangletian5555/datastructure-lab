@@ -205,10 +205,11 @@ void Vector<T>::reverse()
 template <typename T>
 void Vector<T>::load(string filename)
 {
-    filesystem::path p = filename;
+    filesystem::path p = filename;   // 类型path便于提取后缀
     string ext = p.extension().string();
     transform(ext.begin(), ext.end(), ext.begin(), 
                     [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+                    // 小写转化
 
     if(ext == ".txt")
     {
@@ -243,7 +244,7 @@ void Vector<T>::load(string filename)
             exit(EXIT_FAILURE);
         }
         int n = 0;
-        infile.read(reinterpret_cast<char*>(&n), sizeof(n));
+        infile.read(reinterpret_cast<char*>(&n), sizeof(n));    //二进制读，按字节长
         if (n < 0) 
         { 
             cerr << "Broken file!\n"; 
@@ -298,7 +299,7 @@ void Vector<T>::save(string filename)
             exit(EXIT_FAILURE);
         }
 
-        onfile.write(reinterpret_cast<const char*>(&_size), sizeof(_size));
+        onfile.write(reinterpret_cast<const char*>(&_size), sizeof(_size));   // 二进制写 
         onfile.write(reinterpret_cast<const char*>(_elem), static_cast<streamsize>(_size * sizeof(T)));
 
         cout << "Saved successfully to " << filename << " (binary)!" << endl;

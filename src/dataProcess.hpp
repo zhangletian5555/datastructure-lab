@@ -12,14 +12,15 @@
 
 std::time_t ParseTime(const std::string &t);
 
-struct flightInfo
+struct flightInfo   // 航班信息，按照csv表头一一对照保存数据
 {
+    // 能使用int进行保存的一致使用int进行保存
     int flightID;
     int airFares;
     int flightNO;
     int airplaneModel;
-    std::string departureTimeStr, arrivalTimeStr;
-    std::time_t departureTime, arrivalTime;
+    std::string departureTimeStr, arrivalTimeStr;   // 时间字符串便于输出
+    std::time_t departureTime, arrivalTime;         // 时间time_t便于比较计算
     int departureAirport, arrivalAirport;
     int airplaneID;
     std::string departureDate;
@@ -34,10 +35,10 @@ struct flightInfo
         departureTime = ParseTime(depTime);
         arrivalTime = ParseTime(arrTime);
     }
-    flightInfo() = default;
+    flightInfo() = default;   // 重加载默认构造函数便于后续文件读取  
 };
 
-struct IDmapInfo
+struct IDmapInfo    // 机场id和机场名映射信息
 {
     int ID;
     std::string Pinyin;
@@ -46,14 +47,14 @@ struct IDmapInfo
     IDmapInfo() = default;
 };
 
-std::time_t ParseTime(const std::string &t)
+std::time_t ParseTime(const std::string &t)     // 时间解析
 {
-    std::tm tm = {};
-    std::istringstream ss(t);
+    std::tm tm = {};    // ctime提供的可用字符串解析的时间数据结构tm
+    std::istringstream ss(t);   // 流式输入便于处理
     ss >> std::get_time(&tm, "%m/%d/%Y %H:%M");
-    if(ss.fail())
+    if(ss.fail())   // 捕提取失败信息
         { std::cerr << "Fail to parse time!" << std::endl; return -1; }
-    return std::mktime(&tm);
+    return std::mktime(&tm);    // 转换为time_t数据类型
 }
 
 Vector<flightInfo> ReadInfo(const std::string &filename)
@@ -67,18 +68,18 @@ Vector<flightInfo> ReadInfo(const std::string &filename)
     }
 
     std::string line;
-    std::getline(file, line);
+    std::getline(file, line);   // 舍弃表头行
 
     while(std::getline(file, line))
     {
         if(line.empty()) continue;
-        if (!line.empty() && line.back() == '\r') line.pop_back();
+        if (!line.empty() && line.back() == '\r') line.pop_back();   //处理csv行末'\r'特殊字符
 
         std::stringstream ss(line);
         std::string field;
         Vector<std::string> fields;
 
-        while (std::getline(ss, field, ',')) 
+        while (std::getline(ss, field, ','))   // 按行读取，自动以逗号分隔信息
             fields.push_back(field);
 
         if(fields.size() < 10)
@@ -88,6 +89,7 @@ Vector<flightInfo> ReadInfo(const std::string &filename)
         }
 
         try {
+            // stoi将string类型转化为int并自动检查是否越界
             int flightID    = std::stoi(fields[0]);  // flight ID
             int fares       = std::stoi(fields[1]);  // Air Fares
             int flightNO    = std::stoi(fields[2]);  // Flight NO.
@@ -102,7 +104,7 @@ Vector<flightInfo> ReadInfo(const std::string &filename)
             flightInfo info(flightID, fares, flightNO, model, depTimeStr, arrTimeStr,
                             depPort, arrPort, airplaneID, depDate);
             flights.push_back(info);
-        } catch (const std::exception &e){
+        } catch (const std::exception &e){   // 捕获初始化失败信息
             std::cerr << "Fail to initialize in line! error: " << e.what() << std::endl;
         }
     }
@@ -157,15 +159,15 @@ Vector<IDmapInfo> ReadMap(const std::string &filename)
     return Id2Name;
 }
 
-void Statistics(const Vector<flightInfo> &f)
+void Statistics(const Vector<flightInfo> &f)   // 整体数据统计处理
 {
     int n = f.size();
     if(n==0) return;
 
     int minDep = 0, maxDep = 0;
-    int minDurI = 0, maxDurI = 0;
+    int minDurI = 0, maxDurI = 0;   // 记录最小/最大时间间隔的角标便于访问
     int minFareI = 0, maxFareI = 0;
-    long minDur = -1, maxDur = -1;
+    long minDur = -1, maxDur = -1;   //记录最小/最大时间间隔本身便于输出
 
     for(int i=0; i<n; ++i)
     {
@@ -177,12 +179,14 @@ void Statistics(const Vector<flightInfo> &f)
         if(cur.departureTime > f[maxDep].departureTime)
             maxDep = i;
 
+        // 比较间隔时间
         long dur = (long)std::difftime(cur.arrivalTime, cur.departureTime);
         if(minDur < 0 || dur < minDur) 
         { minDur = dur; minDurI = i; }
         if(maxDur < 0 || dur > maxDur)
         { maxDur = dur; maxDurI = i; }
 
+        // 比较航班开销
         if(cur.airFares < f[minFareI].airFares) minFareI = i;
         if(cur.airFares > f[maxFareI].airFares) maxFareI = i;
     }
@@ -190,6 +194,7 @@ void Statistics(const Vector<flightInfo> &f)
     // 输出
     std::cout << "Statistics of flights:" << std::endl;
 
+    // 输出出发时间极值信息
     std::string s_minDep = f[minDep].departureTimeStr;
     int id_minDep = f[minDep].flightID;
     std::replace(s_minDep.begin(), s_minDep.end(), '/', '-');
@@ -202,17 +207,19 @@ void Statistics(const Vector<flightInfo> &f)
     std::cout << "Latest departure time: " << s_maxDep;
     std::cout << ", Flight ID: " << id_maxDep << std::endl;
 
+    // 输出间隔时间极值信息
     double minHours = static_cast<double>(minDur) / 3600.0;
     int id_minDur = f[minDurI].flightID;
     double maxHours = static_cast<double>(maxDur) / 3600.0;
     int id_maxDur = f[maxDurI].flightID;
-    std::cout << "Shortest duration: " << std::fixed << std::setprecision(2) 
+    std::cout << "Shortest duration: " << std::fixed << std::setprecision(2)   // 这里强制控制位数并以0.浮点数输出
                                     << minHours << " hours";
     std::cout << ", Flight ID: " << id_minDur << std::endl;
     std::cout << "Longest duration: " << std::fixed << std::setprecision(2) 
                                     << maxHours << " hours";
     std::cout << ", Flight ID: " << id_maxDur << std::endl;
 
+    // 输出航班开销极值信息
     int minFare = f[minFareI].airFares;
     int id_minFare = f[minFareI].flightID;
     std::cout << "Cheapest flight: ¥" << minFare;
@@ -223,23 +230,25 @@ void Statistics(const Vector<flightInfo> &f)
     std::cout << ", Flight ID: " << id_maxFare << std::endl;
 }
 
-bool IsNextDay(std::time_t dep, std::time_t arr)
+bool IsNextDay(std::time_t dep, std::time_t arr)    // 是否隔天判定函数
 {
     std::tm d = *std::localtime(&dep);
     std::tm a = *std::localtime(&arr);
     if(a.tm_year != d.tm_year) return a.tm_year > d.tm_year;
     if(a.tm_mon != d.tm_mon) return a.tm_mon > d.tm_mon;
-    return a.tm_mday > d.tm_mday;
+    return a.tm_mday > d.tm_mday;   // 逐年/月/日进行判断
 }
 
-inline bool ByFlightID(const flightInfo &a, const flightInfo &b) 
+inline bool ByFlightID(const flightInfo &a, const flightInfo &b)    // 设计被指函数直接返回大小信息
 { return a.flightID < b.flightID; }
 
 void QuickSort(Vector<flightInfo>& v, int lo, int hi,
                 bool (*less)(const flightInfo &a, const flightInfo &b))
 {
+    // 保证输入区间规范性
     if(lo >= hi) return;
 
+    // 处理lo/mid/hi之间关系，体现排序顺序
     int mid = lo + ((hi-lo) >> 1);
     if(less(v[mid], v[lo])) std::swap(v[mid], v[lo]);
     if(less(v[hi], v[lo])) std::swap(v[hi], v[lo]);
@@ -259,23 +268,23 @@ void QuickSort(Vector<flightInfo>& v, int lo, int hi,
     QuickSort(v, j+1, hi, less);
 }
 
-std::string LastSegment(const std::string &p)
+std::string LastSegment(const std::string &p)   // 规范化拼音只提取最后机场信息
 {
     std::size_t pos = p.find_last_of('/');
     return (pos == std::string::npos) ? p : p.substr(pos + 1);
 }
 
-bool EqualsPos(const std::string &ans, const std::string &query)
+bool EqualsPos(const std::string &ans, const std::string &query)    // 判断机场名间是否相等
 {
     if(ans.size() != query.size()) return false;
     for(std::size_t i=0; i<ans.size(); ++i)
         if(std::tolower(static_cast<unsigned char>(ans[i])) !=
-            std::tolower(static_cast<unsigned char>(query[i])))
+            std::tolower(static_cast<unsigned char>(query[i])))     // 小写转化
             return false;
     return true;            
 }
 
-int FindAirport(const Vector<IDmapInfo> &m, const std::string &input)
+int FindAirport(const Vector<IDmapInfo> &m, const std::string &input)   // 在维护的线性表伪字典中顺序查找
 {
     for(int i=0; i<m.size(); ++i)
         if(EqualsPos(LastSegment(m[i].Pinyin), input))
@@ -284,9 +293,9 @@ int FindAirport(const Vector<IDmapInfo> &m, const std::string &input)
     return -1;
 }
 
-void QueryDirect(const Vector<flightInfo> &flights, int src, int dst)
+void QueryDirect(const Vector<flightInfo> &flights, int src, int dst)   // 核心查找函数
 {
-    Vector<flightInfo> cand;
+    Vector<flightInfo> cand;    // 候选队列
     for(int i=0; i<flights.size(); ++i)
         if(flights[i].departureAirport == src && flights[i].arrivalAirport == dst)
             cand.push_back(flights[i]);
@@ -297,6 +306,7 @@ void QueryDirect(const Vector<flightInfo> &flights, int src, int dst)
         return;
     }
 
+    // 统计cheapest/shortest duration/+1 day极值信息
     int minFare = cand[0].airFares;
     long minDur = static_cast<long>(std::difftime(cand[0].arrivalTime, cand[0].departureTime));
     for(int i=1; i<cand.size(); ++i)
@@ -306,6 +316,7 @@ void QueryDirect(const Vector<flightInfo> &flights, int src, int dst)
         if(curDur < minDur) minDur = curDur;
     }
 
+    // 按id排序顺序输出
     QuickSort(cand, 0, cand.size() - 1, ByFlightID);
     
     for(int i=0; i<cand.size(); ++i)

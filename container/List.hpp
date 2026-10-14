@@ -81,10 +81,10 @@ public:
     void pop_back();                                    // 删除末元素
     void insert(Rank r, T const &e);                    // 指定秩插入
     void erase(Rank r);                                 // 指定秩删除
-    void load(string filename);
-    void save(string filename);
-    void show();
-    void reverseShow();
+    void load(string filename);                         // 加载文件
+    void save(string filename);                         // 保存文件
+    void show();                                        // 显示所有元素
+    void reverseShow();                                 // 倒叙访问所有元素
 };
 
 template <typename T>
@@ -92,6 +92,7 @@ void List<T>::init()
 {
     header = new ListNode<T>;
     trailer = new ListNode<T>;
+    // 初始化时只需维护头尾两个哨兵
     header->pred = trailer; header->succ = trailer;
     trailer->pred = header; trailer->succ = header;
     _size = 0;
@@ -148,7 +149,7 @@ template <typename T>
 void List<T>::insert(Rank r, T const &e)
 {
     ListNodePosi(T) p = front();
-    while(r-- > 0 && p != trailer) p = p->succ;
+    while(r-- > 0 && p != trailer) p = p->succ;   //访问到插入位置
     insertBefore(p, e);
 }
 template <typename T>

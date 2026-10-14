@@ -3,7 +3,7 @@
 
 int main()
 {
-    const std::string DATA_DIR = "data/";
+    const std::string DATA_DIR = "data/";   // csv数据统一存放目录
     Vector<flightInfo> flights = ReadInfo(DATA_DIR + "flight-data.csv");
     Vector<IDmapInfo> airports = ReadMap(DATA_DIR + "id2name.csv");
 
@@ -24,10 +24,10 @@ int main()
         std::string srcPinyin, dstPinyin;
         if(!(iss >> srcPinyin >> dstPinyin)) continue;
 
-        if(srcPinyin == "0" && dstPinyin == "0") break;
+        if(srcPinyin == "0" && dstPinyin == "0") break;    // 退出机制
 
-        int src = FindAirport(airports, srcPinyin);
-        int dst = FindAirport(airports, dstPinyin);
+        int src = FindAirport(airports, srcPinyin);     // 起始点
+        int dst = FindAirport(airports, dstPinyin);     // 目的地
         if(src < 0 || dst < 0) continue;
 
         QueryDirect(flights, src, dst);

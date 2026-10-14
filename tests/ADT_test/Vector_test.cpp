@@ -18,26 +18,33 @@ void execute(const string &op, Vector<T> &V)
         T x;
         cin >> x;
         V.push_back(x);
+        V.show();
     }
     else if(op=="pop_back")
-    { V.pop_back(); }
+    { 
+        V.pop_back();
+        V.show();
+    }
     else if(op=="insert")
     {
         T x; int p;
         cin >> p >> x;
         V.insert(p, x);
+        V.show();
     }
     else if(op=="erase")
     {
         int p;
         cin >> p;
         V.erase(p);
+        V.show();
     }
     else if(op=="update")
     {
         T x; int p;
         cin >> p >> x;
         V.update(p, x);
+        V.show();
     }
     else if(op=="size")
     { cout << V.size() << endl; }
