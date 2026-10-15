@@ -7,10 +7,12 @@
 #include <string>
 #include <filesystem>
 #include <ctime>
-#include <iomanip>
+#include <cstdio>
 #include <algorithm>
 
 std::time_t ParseTime(const std::string &t);
+std::string FormatHours(long sec);
+std::string FormatDateTime(const std::string &raw);
 
 struct flightInfo   // 航班信息，按照csv表头一一对照保存数据
 {
@@ -195,28 +197,20 @@ void Statistics(const Vector<flightInfo> &f)   // 整体数据统计处理
     std::cout << "Statistics of flights:" << std::endl;
 
     // 输出出发时间极值信息
-    std::string s_minDep = f[minDep].departureTimeStr;
     int id_minDep = f[minDep].flightID;
-    std::replace(s_minDep.begin(), s_minDep.end(), '/', '-');
-    std::cout << "Earliest departure time: " << s_minDep;
+    std::cout << "Earliest departure time: " << FormatDateTime(f[minDep].departureTimeStr);
     std::cout << ", Flight ID: " << id_minDep << std::endl;
 
-    std::string s_maxDep = f[maxDep].departureTimeStr;
     int id_maxDep = f[maxDep].flightID;
-    std::replace(s_maxDep.begin(), s_maxDep.end(), '/', '-');
-    std::cout << "Latest departure time: " << s_maxDep;
+    std::cout << "Latest departure time: " << FormatDateTime(f[maxDep].departureTimeStr);
     std::cout << ", Flight ID: " << id_maxDep << std::endl;
 
     // 输出间隔时间极值信息
-    double minHours = static_cast<double>(minDur) / 3600.0;
     int id_minDur = f[minDurI].flightID;
-    double maxHours = static_cast<double>(maxDur) / 3600.0;
     int id_maxDur = f[maxDurI].flightID;
-    std::cout << "Shortest duration: " << std::fixed << std::setprecision(2)   // 这里强制控制位数并以0.浮点数输出
-                                    << minHours << " hours";
+    std::cout << "Shortest duration: " << FormatHours(minDur) << " hours";
     std::cout << ", Flight ID: " << id_minDur << std::endl;
-    std::cout << "Longest duration: " << std::fixed << std::setprecision(2) 
-                                    << maxHours << " hours";
+    std::cout << "Longest duration: " << FormatHours(maxDur) << " hours";
     std::cout << ", Flight ID: " << id_maxDur << std::endl;
 
     // 输出航班开销极值信息
@@ -228,6 +222,27 @@ void Statistics(const Vector<flightInfo> &f)   // 整体数据统计处理
     int id_maxFare = f[maxFareI].flightID;
     std::cout << "Most expensive flight: ¥" << maxFare;
     std::cout << ", Flight ID: " << id_maxFare << std::endl;
+}
+
+// 秒 -> 小时字符串，保留 1~2 位小数（0.5 而不是 0.50，8.92 保持 8.92）
+std::string FormatHours(long sec)
+{
+    if(sec < 0) sec = 0;
+    long c = (sec + 18) / 36;                        // 秒 -> 0.01 小时（四舍五入）
+    long frac = c % 100;                             // 小数部分，单位 0.01 小时
+    if(frac % 10 == 0) frac /= 10;                   // 末尾是 0 只留一位
+    else if(frac < 10) return std::to_string(c / 100) + ".0" + std::to_string(frac);
+    return std::to_string(c / 100) + "." + std::to_string(frac);
+}
+
+// "09/01/2024 00:05" -> "2024-09-01 00:05"
+std::string FormatDateTime(const std::string &raw)
+{
+    char buf[24];
+    std::snprintf(buf, sizeof(buf), "%s-%s-%s %s",
+                  raw.substr(6, 4).c_str(), raw.substr(0, 2).c_str(),
+                  raw.substr(3, 2).c_str(), raw.substr(11, 5).c_str());
+    return std::string(buf);
 }
 
 bool IsNextDay(std::time_t dep, std::time_t arr)    // 是否隔天判定函数
